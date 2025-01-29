@@ -1,7 +1,7 @@
-import app from './app.js';
+import { server } from './app.js';
 
 const port = process.env.PORT || 5050;
-app.listen(port, () => {
+server.listen(port, () => {
   /* eslint-disable no-console */
   console.log(`Listening: http://localhost:${port}`);
   /* eslint-enable no-console */
