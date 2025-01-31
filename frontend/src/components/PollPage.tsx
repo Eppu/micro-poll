@@ -55,8 +55,6 @@ const PollPage = () => {
   if (error) return <p className="text-red-500">{error}</p>;
   if (!poll) return <p>Poll not found.</p>;
 
-  console.log('poll.votes', poll.votes);
-
   return (
     <div className="max-w-lg mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">{poll.question}</h2>
