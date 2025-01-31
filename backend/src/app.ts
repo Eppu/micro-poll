@@ -159,23 +159,25 @@ app.post(
         return;
       }
 
+      let pollUpdated = false;
       if (!updatedPoll.startTime) {
         updatedPoll.startTime = new Date();
+        pollUpdated = true;
         console.log(`Poll ${id} started`, { startTime: updatedPoll.startTime });
-
-        setTimeout(async () => {
-          updatedPoll.isClosed = true;
-          await updatedPoll.save();
-          io.to(id).emit('poll_closed', {
-            results: updatedPoll.votes
-              ? Array.from(updatedPoll.votes.entries())
-              : [],
-          });
-          console.log(
-            `Poll ${id} closed automatically after ${updatedPoll.timeLimit} seconds`
-          );
-        }, updatedPoll.timeLimit * 1000);
       }
+
+      setTimeout(async () => {
+        updatedPoll.isClosed = true;
+        await updatedPoll.save();
+        io.to(id).emit('poll_closed', {
+          results: updatedPoll.votes
+            ? Array.from(updatedPoll.votes.entries())
+            : [],
+        });
+        console.log(
+          `Poll ${id} closed automatically after ${updatedPoll.timeLimit} seconds`
+        );
+      }, updatedPoll.timeLimit * 1000);
 
       if (!updatedPoll.options.includes(option)) {
         res.status(400).json({ error: 'Invalid option' });
@@ -187,7 +189,16 @@ app.post(
       updatedPoll.votes = updatedVotes;
       await updatedPoll.save();
 
-      io.to(id).emit('vote_cast', { option, votes: updatedPoll.votes });
+      if (pollUpdated) {
+        console.log('Poll updated:', updatedPoll);
+        io.to(id).emit('poll_updated', updatedPoll);
+      }
+
+      // io.to(id).emit('vote_cast', { option, votes: updatedPoll.votes });
+      io.to(id).emit('vote_cast', {
+        option,
+        votes: updatedPoll.votes,
+      });
       res.json({ success: true });
     } catch (error) {
       console.error('Error processing vote:', error);
@@ -195,7 +206,6 @@ app.post(
     }
   }
 );
-
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
